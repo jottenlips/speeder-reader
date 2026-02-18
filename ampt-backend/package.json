@@ -1,0 +1,16 @@
+{
+  "name": "speeder-reader-backend",
+  "version": "1.0.0",
+  "description": "Ampt backend serving the SpeederReader web app as static assets",
+  "type": "module",
+  "dependencies": {
+    "@ampt/sdk": "latest"
+  },
+  "ampt": {
+    "static": [
+      "static"
+    ],
+    "org": "jottenlips823486",
+    "app": "speeder-reader"
+  }
+}
