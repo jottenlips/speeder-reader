@@ -19,6 +19,8 @@ export type RootStackParamList = {
     numPages: number;
     startIndex: number;
     fileKey: string;
+    /** When true, the item is auto-archived in the library when reading finishes. */
+    isLibraryItem?: boolean;
   };
 };
 

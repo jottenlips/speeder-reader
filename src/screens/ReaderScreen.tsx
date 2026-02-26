@@ -23,6 +23,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../../App";
 import { firstIndexOfPage, WordEntry } from "../utils/pdfParser";
 import { saveProgress, clearProgress } from "../utils/progress";
+import { archiveItem } from "../utils/library";
 import { t } from "../utils/i18n";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "../contexts/ThemeContext";
@@ -224,6 +225,7 @@ export default function ReaderScreen({ route, navigation }: Props) {
     numPages,
     startIndex,
     fileKey,
+    isLibraryItem,
   } = route.params;
 
   const [currentIndex, setCurrentIndex] = useState(startIndex);
@@ -330,11 +332,14 @@ export default function ReaderScreen({ route, navigation }: Props) {
     }
   }, [currentPage, fileKey, currentIndex]);
 
-  // Clear saved progress when finished
+  // Clear saved progress when finished; auto-archive library items
   const isFinished = currentIndex >= words.length;
   useEffect(() => {
-    if (isFinished) clearProgress(fileKey);
-  }, [isFinished, fileKey]);
+    if (isFinished) {
+      clearProgress(fileKey);
+      if (isLibraryItem) archiveItem(fileKey);
+    }
+  }, [isFinished, fileKey, isLibraryItem]);
 
   const handleTap = useCallback(() => {
     setIsPlaying((p) => {
