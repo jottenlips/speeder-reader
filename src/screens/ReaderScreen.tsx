@@ -19,6 +19,10 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import {
+  activateKeepAwakeAsync,
+  deactivateKeepAwake,
+} from "expo-keep-awake";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../../App";
 import { firstIndexOfPage, WordEntry } from "../utils/pdfParser";
@@ -34,6 +38,8 @@ const WebView =
   Platform.OS !== "web" ? require("react-native-webview").default : null;
 
 type Props = NativeStackScreenProps<RootStackParamList, "Reader">;
+
+const READER_KEEP_AWAKE_TAG = "reader-screen";
 
 const CONTEXT_LINES = 5;
 const WORDS_PER_LINE_EST = 8; // rough estimate for advance threshold
@@ -188,6 +194,7 @@ export default function ReaderScreen({ route, navigation }: Props) {
   const [pageInput, setPageInput] = useState("");
 
   const [flowReading, setFlowReading] = useState(true);
+  const [keepScreenAwake, setKeepScreenAwake] = useState(false);
 
   const indexRef = useRef(currentIndex);
   const wpmRef = useRef(wpm);
@@ -204,6 +211,17 @@ export default function ReaderScreen({ route, navigation }: Props) {
   useEffect(() => {
     flowReadingRef.current = flowReading;
   }, [flowReading]);
+
+  useEffect(() => {
+    if (!keepScreenAwake) {
+      void deactivateKeepAwake(READER_KEEP_AWAKE_TAG);
+      return;
+    }
+    void activateKeepAwakeAsync(READER_KEEP_AWAKE_TAG);
+    return () => {
+      void deactivateKeepAwake(READER_KEEP_AWAKE_TAG);
+    };
+  }, [keepScreenAwake]);
 
   // Called by ContextDisplay when the highlighted word's onLayout reports it's past
   // the visible container. Advances the window so the current word is near the top.
@@ -569,6 +587,19 @@ export default function ReaderScreen({ route, navigation }: Props) {
               {font === "opendyslexic" ? "OpenDyslexic" : "Dyslexic"}
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.flowBtn, keepScreenAwake && styles.flowBtnActive]}
+            onPress={() => setKeepScreenAwake((v) => !v)}
+          >
+            <Text
+              style={[
+                styles.flowBtnText,
+                keepScreenAwake && styles.flowBtnTextActive,
+              ]}
+            >
+              {keepScreenAwake ? t(lang, "keepAwakeOn") : t(lang, "keepAwakeOff")}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -850,6 +881,8 @@ function makeStyles(c: ThemeColors, SERIF: string = 'Georgia') {
     },
     speedToggles: {
       flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "center",
       alignItems: "center",
       gap: 10,
     },
